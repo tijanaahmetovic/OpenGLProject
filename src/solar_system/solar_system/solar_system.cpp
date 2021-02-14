@@ -21,9 +21,10 @@ void processInput(GLFWwindow *window);
 // settings
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
+const int NUM = 9;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 55.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 500.0f));
 float lastX = (float)SCR_WIDTH / 2.0;
 float lastY = (float)SCR_HEIGHT / 2.0;
 bool firstMouse = true;
@@ -80,17 +81,60 @@ int main()
 
     // load models
     // -----------
-    Model jupiter(FileSystem::getPath("resources/objects/planets/jupiter/jupiter.obj"));
-    Model earth(FileSystem::getPath("resources/objects/planets/earth/earth.obj"));
-    Model mercury(FileSystem::getPath("resources/objects/planets/mercury/mercury.obj"));
-    Model venus(FileSystem::getPath("resources/objects/planets/venus/venus.obj"));
-    Model mars(FileSystem::getPath("resources/objects/planets/mars/mars.obj"));
-    Model uranus(FileSystem::getPath("resources/objects/planets/uranus/uranus.obj"));
-    Model neptune(FileSystem::getPath("resources/objects/planets/neptune/neptune.obj"));
-    Model saturn(FileSystem::getPath("resources/objects/planets/saturn/saturn.obj"));
-    Model sun(FileSystem::getPath("resources/objects/planets/sun/sun.obj"));
-  
 
+  
+    Model** solarSystem = new Model*[NUM];
+    solarSystem[0] = new Model(FileSystem::getPath("resources/objects/planets/sun/sun.obj"));
+    solarSystem[1] = new Model(FileSystem::getPath("resources/objects/planets/mercury/mercury.obj"));
+    solarSystem[2] = new Model(FileSystem::getPath("resources/objects/planets/venus/venus.obj"));
+    solarSystem[3] = new Model(FileSystem::getPath("resources/objects/planets/earth/earth.obj"));
+    solarSystem[4] = new Model(FileSystem::getPath("resources/objects/planets/mars/mars.obj"));
+    solarSystem[5] = new Model(FileSystem::getPath("resources/objects/planets/jupiter/jupiter.obj"));
+    solarSystem[6] = new Model(FileSystem::getPath("resources/objects/planets/saturn/saturn.obj"));
+    solarSystem[7] = new Model(FileSystem::getPath("resources/objects/planets/uranus/uranus.obj"));
+    solarSystem[8] = new Model(FileSystem::getPath("resources/objects/planets/neptune/neptune.obj"));
+   
+    float rotationAngles[NUM] = {7.25f, 0.01f, 177.4f, 23.44f, 3.13f, 26.73f, 97.77f, 28.32f};
+    //float distanceFromSunReal[9] = {0.0f, 165.0f, 190.0f, 210.0f, 250.0f, 500.0f, 850.0f, 1550.0f, 2450.0f};
+    float distanceFromSun[9] = { 0.0f, 50.0f, 100.0f, 150.0f, 200.0f, 250.0f, 300.0f, 350.0f, 400.0f };
+    float rotationSpeed[9] = { 0.0f, 0.02943f, -0.02176f, 0.0185f, 0.01491f, 0.00851f, 0.006f, 0.004225f, 0.003374f };
+    float revolutionSpeed[9] = { 0.0f, 0.047f, 0.035f, 0.029f, 0.024f, 0.013f, 0.00969f, 0.00681f, 0.00543f };
+
+    glm::vec3* revolutionAxis = new glm::vec3[NUM];
+    for (int i = 0; i < NUM; i++) {
+        revolutionAxis[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+
+    
+    glm::vec3* rotationAxisTilt = new glm::vec3[NUM];
+    for (int i = 0; i < NUM; i++) {
+        rotationAxisTilt[i] = glm::vec3(0.0f, sin(rotationAngles[i]), cos(rotationAngles[i]));
+        
+    }
+
+
+    glm::vec3* rotationAxis = new glm::vec3[NUM];
+    for (int i = 0; i < NUM; i++) {
+        rotationAxis[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+    rotationAxis[7] = glm::vec3(1.0f, 0.0f, 0.0f);
+
+
+   //model
+    glm::mat4* modelMatrices = new glm::mat4[NUM];
+    for (int i = 0; i < NUM; i++) {
+        modelMatrices[i] = glm::mat4(1.0f);
+    }
+    modelMatrices[0] = glm::scale(modelMatrices[0], glm::vec3(5.0f, 5.0f, 5.0f));
+    for (int i = 1; i < 9; i++) {
+        modelMatrices[i] = glm::translate(modelMatrices[i], glm::vec3(distanceFromSun[i], 0.0f, 0.0f));
+        //modelMatrices[i] = glm::rotate(modelMatrices[i], glm::radians(20.0f), rotationAxisTilt[i]);
+    }
+   
+
+
+  
+    
 
     // render loop
     // -----------
@@ -112,62 +156,28 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // configure transformation matrices
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
-        glm::mat4 view = camera.GetViewMatrix();;
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 2000.0f);
+        glm::mat4 view = camera.GetViewMatrix();
         shader.use();
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
 
-        // draw planet
-        glm::mat4 model = glm::mat4(1.0f);
-
-        model = glm::translate(model, glm::vec3(-340.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(15.0f, 15.0f, 15.0f));
-        shader.setMat4("model", model);
-        sun.Draw(shader);
        
-        model = glm::mat4(1.0f);
+
+        for (unsigned int i = 0; i < NUM; i++)
+        {
+            //revolution
+            modelMatrices[i] = glm::translate(modelMatrices[i], glm::vec3(-distanceFromSun[i], 0.0f, 0.0f));
+            modelMatrices[i] = glm::rotate(modelMatrices[i], currentFrame * revolutionSpeed[i] * glm::radians(0.1f), revolutionAxis[i]);
+            modelMatrices[i] = glm::translate(modelMatrices[i], glm::vec3(distanceFromSun[i], 0.0f, 0.0f));
+            
+            //rotation 
+            //modelMatrices[i] = glm::rotate(modelMatrices[i], (float)glfwGetTime() * rotationSpeed[i] * glm::radians(0.1f), rotationAxis[i]);
+            shader.setMat4("model", modelMatrices[i]);
+            solarSystem[i]->Draw(shader);
+
         
-        model = glm::translate(model, glm::vec3(-175.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-        shader.setMat4("model", model);
-        mercury.Draw(shader);
-
-        model = glm::translate(model, glm::vec3(25.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        venus.Draw(shader);
-
-        model = glm::translate(model, glm::vec3(20.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        earth.Draw(shader);
-
-
-        model = glm::translate(model, glm::vec3(40.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        mars.Draw(shader);
-
-
-        model = glm::translate(model, glm::vec3(250.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        jupiter.Draw(shader);
-
-
-        model = glm::translate(model, glm::vec3(350.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        saturn.Draw(shader);
-
-
-
-        model = glm::translate(model, glm::vec3(700.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        uranus.Draw(shader);
-
-
-
-        model = glm::translate(model, glm::vec3(900.0f, 0.0f, 0.0f));
-        shader.setMat4("model", model);
-        neptune.Draw(shader);
-
+        }
 
  
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
@@ -188,13 +198,13 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime * 10.0f);
+        camera.ProcessKeyboard(FORWARD, deltaTime * 20.0f);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime * 10.0f);
+        camera.ProcessKeyboard(BACKWARD, deltaTime * 20.0f);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime * 10.0f);
+        camera.ProcessKeyboard(LEFT, deltaTime * 20.0f);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime * 10.0f);
+        camera.ProcessKeyboard(RIGHT, deltaTime * 20.0f);
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
