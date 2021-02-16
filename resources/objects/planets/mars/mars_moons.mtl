@@ -1,7 +1,7 @@
 # Blender MTL File: 'None'
 # Material Count: 2
 
-newmtl 01_-_Default.001
+newmtl 02_-_Default
 Ns 18.000005
 Ka 1.000000 1.000000 1.000000
 Kd 0.588235 0.588235 0.588235
@@ -10,9 +10,8 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.000000
 d 1.000000
 illum 1
-map_Kd Saturn_Tex.jpg
 
-newmtl 07_-_Default.001
+newmtl 03_-_Default
 Ns 18.000005
 Ka 1.000000 1.000000 1.000000
 Kd 0.588235 0.588235 0.588235
@@ -21,4 +20,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd Rings_Tex.jpg
+map_Kd Deimos.jpg
